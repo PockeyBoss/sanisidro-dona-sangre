@@ -1,0 +1,71 @@
+name: Ajustar logo Cruz Roja
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  ajustar-logo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reemplazar logo por SVG con proporciones oficiales
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old_header = '<a href="#" class="logo"><svg class="logo-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" aria-label="Cruz Roja Argentina"><rect x="34" y="5" width="32" height="90" fill="#ed1c24"/><rect x="5" y="34" width="90" height="32" fill="#ed1c24"/></svg><div class="logo-text"><div class="logo-main">CRUZ ROJA</div><div class="logo-secondary">ARGENTINA</div><div class="logo-filial">FILIAL SAN ISIDRO</div></div></a>'
+          new_logo = '''<a href="#" class="official-logo" aria-label="Cruz Roja Argentina Filial San Isidro">
+            <svg viewBox="0 0 468 157" xmlns="http://www.w3.org/2000/svg" role="img">
+              <g transform="translate(0,0)">
+                <rect x="0" y="0" width="151" height="157" fill="#ed1c24"/>
+                <rect x="50" y="0" width="51" height="157" fill="#fff"/>
+                <rect x="0" y="53" width="151" height="51" fill="#fff"/>
+                <rect x="50" y="0" width="51" height="157" fill="#ed1c24"/>
+                <rect x="0" y="53" width="151" height="51" fill="#ed1c24"/>
+              </g>
+              <g fill="#111" font-family="Arial, Helvetica, sans-serif" font-weight="700">
+                <text x="182" y="47" font-size="40" letter-spacing="-1.5">CRUZ ROJA</text>
+                <text x="182" y="95" font-size="40" letter-spacing="-1.5">ARGENTINA</text>
+              </g>
+              <text x="191" y="132" fill="#111" font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="19" letter-spacing="3.2">FILIAL SAN ISIDRO</text>
+            </svg>
+          </a>'''
+          if old_header not in s:
+              raise SystemExit('No se encontró el logo del encabezado')
+          s = s.replace(old_header, new_logo, 1)
+
+          old_footer = '<div class="logo"><svg class="logo-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect x="34" y="5" width="32" height="90" fill="#ed1c24"/><rect x="5" y="34" width="90" height="32" fill="#ed1c24"/></svg><div class="logo-text"><div class="logo-main">CRUZ ROJA</div><div class="logo-secondary">ARGENTINA</div><div class="logo-filial">FILIAL SAN ISIDRO</div></div></div>'
+          new_footer = '''<div class="official-logo footer-official-logo" aria-label="Cruz Roja Argentina Filial San Isidro">
+            <svg viewBox="0 0 468 157" xmlns="http://www.w3.org/2000/svg" role="img">
+              <rect x="0" y="0" width="151" height="157" fill="#ed1c24"/>
+              <rect x="50" y="0" width="51" height="157" fill="#fff"/>
+              <rect x="0" y="53" width="151" height="51" fill="#fff"/>
+              <rect x="50" y="0" width="51" height="157" fill="#ed1c24"/>
+              <rect x="0" y="53" width="151" height="51" fill="#ed1c24"/>
+              <g fill="#fff" font-family="Arial, Helvetica, sans-serif" font-weight="700">
+                <text x="182" y="47" font-size="40" letter-spacing="-1.5">CRUZ ROJA</text>
+                <text x="182" y="95" font-size="40" letter-spacing="-1.5">ARGENTINA</text>
+              </g>
+              <text x="191" y="132" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="19" letter-spacing="3.2">FILIAL SAN ISIDRO</text>
+            </svg>
+          </div>'''
+          if old_footer not in s:
+              raise SystemExit('No se encontró el logo del pie')
+          s = s.replace(old_footer, new_footer, 1)
+
+          s = s.replace('.logo{display:flex;align-items:center;gap:15px;height:64px}', '.logo{display:flex;align-items:center;gap:15px;height:64px}.official-logo{display:block;width:470px;max-width:100%;line-height:0}.official-logo svg{display:block;width:100%;height:auto}.footer-official-logo{width:390px;max-width:100%}')
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Ajustar logo Cruz Roja a proporciones oficiales"
+          git push
