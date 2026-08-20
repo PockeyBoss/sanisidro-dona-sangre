@@ -1,0 +1,42 @@
+name: Corregir tamaño del logo
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix-logo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ajustar logo para que quede estetico
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          s = s.replace('width:470px;max-width:100%;line-height:0', 'width:205px;max-width:100%;flex:0 0 205px;line-height:0')
+          s = s.replace('width:390px;max-width:100%', 'width:210px;max-width:100%;flex:0 0 210px')
+          marker = '</style>'
+          css = '''
+          /* Ajuste visual del logo: compacto, proporcionado y alineado con la navegación */
+          .header-inner .official-logo{width:205px;flex:0 0 205px;height:auto;align-self:center}
+          .header-inner .official-logo svg{width:205px;height:auto;display:block}
+          .footer-official-logo{width:210px;flex:0 0 210px}
+          .footer-official-logo svg{width:210px;height:auto;display:block}
+          @media(max-width:600px){.header-inner .official-logo{width:185px;flex-basis:185px}.header-inner .official-logo svg{width:185px}.footer-official-logo{width:190px;flex-basis:190px}.footer-official-logo svg{width:190px}}
+          '''
+          if '/* Ajuste visual del logo: compacto, proporcionado y alineado con la navegación */' not in s:
+              s = s.replace(marker, css + marker, 1)
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Corregir tamaño y alineación del logo"
+          git push
