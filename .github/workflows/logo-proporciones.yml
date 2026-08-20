@@ -1,0 +1,51 @@
+name: Corregir logo Cruz Roja
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  corregir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ajustar logo directamente en index.html
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          logo='''<svg viewBox="0 0 512 177" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cruz Roja Argentina Filial San Isidro">
+            <rect x="21" y="21" width="152" height="155" fill="#ed1c24"/>
+            <rect x="71" y="21" width="52" height="155" fill="#fff"/>
+            <rect x="21" y="72" width="152" height="53" fill="#fff"/>
+            <rect x="71" y="21" width="52" height="155" fill="#ed1c24"/>
+            <rect x="21" y="72" width="152" height="53" fill="#ed1c24"/>
+            <g fill="#111" font-family="Arial, Helvetica, sans-serif" font-weight="700">
+              <text x="204" y="57" font-size="42" letter-spacing="-1.4">CRUZ ROJA</text>
+              <text x="204" y="105" font-size="42" letter-spacing="-1.4">ARGENTINA</text>
+            </g>
+            <text x="214" y="142" fill="#111" font-family="Arial, Helvetica, sans-serif" font-weight="500" font-size="19" letter-spacing="3.4">FILIAL SAN ISIDRO</text>
+          </svg>'''
+          pattern=r'<a href="#" class="official-logo"[^>]*>\s*<svg.*?</svg>\s*</a>'
+          s,n=re.subn(pattern,'<a href="#" class="official-logo">'+logo+'</a>',s,count=1,flags=re.S)
+          if n!=1: raise SystemExit('No se encontró el logo del encabezado')
+          pattern2=r'<div class="official-logo footer-official-logo"[^>]*>\s*<svg.*?</svg>\s*</div>'
+          footer='''<div class="official-logo footer-official-logo">'''+logo.replace('fill="#111"','fill="#fff"').replace('fill="#111"','fill="#fff"')+'''</div>'''
+          s,n=re.subn(pattern2,footer,s,count=1,flags=re.S)
+          if n!=1: raise SystemExit('No se encontró el logo del pie')
+          s=s.replace('.official-logo{display:block;width:470px;max-width:100%;line-height:0}', '.official-logo{display:block;width:200px;flex:0 0 200px;line-height:0}')
+          s=s.replace('.footer-official-logo{width:390px;max-width:100%}', '.footer-official-logo{width:205px;flex:0 0 205px}')
+          s=s.replace('.official-logo svg{display:block;width:100%;height:auto}', '.official-logo svg{display:block;width:100%;height:auto}')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Guardar cambios
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || (git commit -m "Corregir proporciones del logo Cruz Roja" && git push)
