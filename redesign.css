@@ -1,1 +1,4 @@
-/* Archivo legado mantenido para compatibilidad. El diseño actual se encuentra en site.css. */
+/* Ajustes finales de identidad y presentación */
+.footer-brand{width:235px;height:auto;background:url("assets/logo-cruz-roja-san-isidro-white.svg") left center/contain no-repeat;line-height:0}
+.footer-brand img{visibility:hidden;display:block;width:100%;height:auto}
+@media(max-width:600px){.footer-brand{width:210px}}
